@@ -38,6 +38,7 @@ async function analyzeAsset(symbol, userQuery) {
     news: null,
     technical: null,
     fundamental: null,
+    recommendation: null,
     summary: ''
   };
 
@@ -52,6 +53,7 @@ async function analyzeAsset(symbol, userQuery) {
     analysis.fundamental = fundamentalData;
     analysis.sentiment = getSentimentFromNews(newsData);
     analysis.news = newsData;
+    analysis.recommendation = generateRecommendation(technicalData, fundamentalData, getSentimentFromNews(newsData));
     analysis.summary = generateSummary(analysis, userQuery);
 
     return analysis;
@@ -210,6 +212,13 @@ function generateSummary(analysis, userQuery) {
     summary += `📈 **Technical:** ${technical.message}\n`;
   }
   
+  // Recommendation (prominent placement)
+  if (analysis.recommendation) {
+    summary += `\n🎯 **RECOMMENDATION: ${analysis.recommendation.action}**\n`;
+    summary += `📊 **Confidence:** ${analysis.recommendation.confidence} | **Risk:** ${analysis.recommendation.riskLevel}\n`;
+    summary += `💡 **Analysis:** ${analysis.recommendation.message}\n\n`;
+  }
+  
   // Sentiment
   if (sentiment.score !== undefined) {
     summary += `🎭 **Sentiment:** ${sentiment.message}\n`;
@@ -320,4 +329,153 @@ function getSentimentFromNews(newsData) {
     message: message,
     headlines: headlines.slice(0, 5)
   };
+}
+
+function generateRecommendation(technical, fundamental, sentiment) {
+  let score = 0;
+  let reasons = [];
+  let riskFactors = [];
+  
+  // Technical Analysis Scoring (40% weight)
+  if (technical.price !== 'N/A') {
+    const changePercent = parseFloat(technical.changePercent);
+    const currentPrice = parseFloat(technical.price);
+    const sma20 = parseFloat(technical.indicators.sma20);
+    
+    // Price momentum
+    if (changePercent > 3) {
+      score += 2;
+      reasons.push('Strong upward momentum (+3%)');
+    } else if (changePercent > 0) {
+      score += 1;
+      reasons.push('Positive price movement');
+    } else if (changePercent < -3) {
+      score -= 2;
+      reasons.push('Significant price decline (-3%)');
+      riskFactors.push('Recent sharp decline');
+    } else if (changePercent < 0) {
+      score -= 1;
+      reasons.push('Negative price movement');
+    }
+    
+    // Trend analysis
+    if (currentPrice > sma20 * 1.02) {
+      score += 1;
+      reasons.push('Price above 20-day average');
+    } else if (currentPrice < sma20 * 0.98) {
+      score -= 1;
+      reasons.push('Price below 20-day average');
+      riskFactors.push('Below short-term trend');
+    }
+  }
+  
+  // Fundamental Analysis Scoring (40% weight)
+  if (fundamental.peRatio !== 'N/A') {
+    const pe = parseFloat(fundamental.peRatio);
+    if (pe > 0) {
+      if (pe < 15) {
+        score += 2;
+        reasons.push('Attractive P/E ratio (value play)');
+      } else if (pe < 25) {
+        score += 1;
+        reasons.push('Reasonable P/E ratio');
+      } else if (pe > 40) {
+        score -= 1;
+        reasons.push('High P/E ratio (expensive)');
+        riskFactors.push('High valuation risk');
+      }
+    }
+  }
+  
+  // Dividend yield consideration
+  if (fundamental.dividendYield !== 'N/A') {
+    const divYield = parseFloat(fundamental.dividendYield);
+    if (divYield > 3) {
+      score += 1;
+      reasons.push('Good dividend yield');
+    }
+  }
+  
+  // Sentiment Analysis Scoring (20% weight)
+  if (sentiment.score > 0.5) {
+    score += 1;
+    reasons.push('Positive market sentiment');
+  } else if (sentiment.score < -0.5) {
+    score -= 1;
+    reasons.push('Negative market sentiment');
+    riskFactors.push('Poor news sentiment');
+  }
+  
+  // Generate recommendation
+  let recommendation, confidence, action;
+  
+  if (score >= 3) {
+    recommendation = 'BUY';
+    action = '🟢 Strong Buy';
+    confidence = 'High';
+  } else if (score >= 1) {
+    recommendation = 'BUY';
+    action = '🟢 Buy';
+    confidence = 'Medium';
+  } else if (score >= -1) {
+    recommendation = 'HOLD';
+    action = '🟡 Hold';
+    confidence = 'Medium';
+  } else if (score >= -3) {
+    recommendation = 'SELL';
+    action = '🔴 Sell';
+    confidence = 'Medium';
+  } else {
+    recommendation = 'SELL';
+    action = '🔴 Strong Sell';
+    confidence = 'High';
+  }
+  
+  // Risk Assessment
+  let riskLevel;
+  if (riskFactors.length >= 3) {
+    riskLevel = 'High';
+  } else if (riskFactors.length >= 1) {
+    riskLevel = 'Medium';
+  } else {
+    riskLevel = 'Low';
+  }
+  
+  return {
+    recommendation: recommendation,
+    action: action,
+    confidence: confidence,
+    score: score,
+    riskLevel: riskLevel,
+    reasons: reasons.slice(0, 4),
+    riskFactors: riskFactors.slice(0, 3),
+    message: generateRecommendationMessage(recommendation, confidence, riskLevel)
+  };
+}
+
+function generateRecommendationMessage(recommendation, confidence, riskLevel) {
+  let message = '';
+  
+  if (recommendation === 'BUY') {
+    message = `${confidence} confidence buy recommendation. `;
+    if (riskLevel === 'Low') {
+      message += 'Low risk investment with good upside potential.';
+    } else if (riskLevel === 'Medium') {
+      message += 'Moderate risk - consider position sizing carefully.';
+    } else {
+      message += 'Higher risk - suitable for aggressive investors only.';
+    }
+  } else if (recommendation === 'HOLD') {
+    message = `Hold current position. `;
+    message += 'Mixed signals suggest waiting for clearer direction.';
+  } else {
+    message = `${confidence} confidence sell recommendation. `;
+    if (riskLevel === 'High') {
+      message += 'High risk of further decline - consider exit strategy.';
+    } else {
+      message += 'Consider taking profits or reducing exposure.';
+    }
+  }
+  
+  return message;
 }

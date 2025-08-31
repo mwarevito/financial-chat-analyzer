@@ -220,6 +220,89 @@ header p {
     40% { transform: scale(1); opacity: 1; }
 }
 
+.recommendation-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #28a745;
+    margin: 20px 0;
+}
+
+.recommendation-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.rec-action {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.rec-action:contains("🟢") {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.rec-action:contains("🟡") {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.rec-action:contains("🔴") {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.rec-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.rec-details p {
+    margin: 0;
+    padding: 5px 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.rec-message {
+    font-style: italic;
+    color: #495057;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.rec-reasons, .rec-risks {
+    margin-top: 15px;
+}
+
+.rec-reasons ul, .rec-risks ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.rec-reasons li {
+    color: #28a745;
+    margin: 3px 0;
+}
+
+.rec-risks li {
+    color: #dc3545;
+    margin: 3px 0;
+}
+
 @media (max-width: 600px) {
     .container {
         padding: 10px;
@@ -235,5 +318,10 @@ header p {
     
     .quick-actions {
         justify-content: center;
+    }
+    
+    .rec-details {
+        flex-direction: column;
+        gap: 5px;
     }
 }

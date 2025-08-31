@@ -128,6 +128,42 @@ function formatAnalysis(analysis) {
     html += `<div>${formatMarkdown(analysis.summary)}</div>`;
     html += `</div>`;
     
+    // Recommendation (prominent placement)
+    if (analysis.recommendation) {
+        html += `<div class="analysis-section recommendation-section">`;
+        html += `<h4>🎯 Investment Recommendation</h4>`;
+        html += `<div class="recommendation-card">`;
+        html += `<div class="rec-action">${analysis.recommendation.action}</div>`;
+        html += `<div class="rec-details">`;
+        html += `<p><strong>Confidence:</strong> ${analysis.recommendation.confidence}</p>`;
+        html += `<p><strong>Risk Level:</strong> ${analysis.recommendation.riskLevel}</p>`;
+        html += `<p><strong>Score:</strong> ${analysis.recommendation.score}/5</p>`;
+        html += `</div>`;
+        html += `<p class="rec-message">${analysis.recommendation.message}</p>`;
+        if (analysis.recommendation.reasons.length > 0) {
+            html += `<div class="rec-reasons">`;
+            html += `<strong>Key Reasons:</strong>`;
+            html += `<ul>`;
+            analysis.recommendation.reasons.forEach(reason => {
+                html += `<li>✓ ${reason}</li>`;
+            });
+            html += `</ul>`;
+            html += `</div>`;
+        }
+        if (analysis.recommendation.riskFactors.length > 0) {
+            html += `<div class="rec-risks">`;
+            html += `<strong>Risk Factors:</strong>`;
+            html += `<ul>`;
+            analysis.recommendation.riskFactors.forEach(risk => {
+                html += `<li>⚠️ ${risk}</li>`;
+            });
+            html += `</ul>`;
+            html += `</div>`;
+        }
+        html += `</div>`;
+        html += `</div>`;
+    }
+
     // Technical Analysis
     if (analysis.technical && analysis.technical.price !== 'N/A') {
         html += `<div class="analysis-section">`;
