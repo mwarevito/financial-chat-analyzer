@@ -40,7 +40,7 @@ async function sendMessage() {
     
     try {
         // Send to serverless function for analysis
-        const response = await fetch('/.netlify/functions/analyze', {
+        const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
