@@ -9,16 +9,11 @@ A real-time chat-based financial analysis tool that provides sentiment analysis,
 - **🎭 Sentiment Analysis**: AI-powered sentiment analysis from recent news headlines
 - **📰 News Integration**: Latest news articles and their impact analysis
 - **📊 Fundamental Analysis**: Key financial metrics like P/E ratio, market cap, dividend yield
-- **⚡ Real-time Updates**: WebSocket-based real-time communication
+- **🎯 Smart Recommendations**: AI-powered buy/sell/hold recommendations with risk assessment
 
 ## Quick Start
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Set up API keys:**
+1. **Set up API keys:**
    ```bash
    cp .env.example .env
    ```
@@ -26,12 +21,16 @@ A real-time chat-based financial analysis tool that provides sentiment analysis,
    - **Alpha Vantage API**: Get free key at https://www.alphavantage.co/support/#api-key
    - **News API**: Get free key at https://newsapi.org/register
 
-3. **Run the application:**
+2. **Local development:**
    ```bash
-   npm start
+   npm install -g vercel
+   vercel dev
    ```
 
-4. **Open your browser** and go to `http://localhost:3000`
+3. **Deploy to Vercel:**
+   ```bash
+   vercel --prod
+   ```
 
 ## Usage
 
@@ -43,10 +42,10 @@ Simply type questions about stocks in the chat:
 
 ## Tech Stack
 
-- **Backend**: Node.js, Express, Socket.io
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
+- **Backend**: Vercel Serverless Functions
 - **APIs**: Alpha Vantage (financial data), News API (news & sentiment)
-- **Real-time**: WebSocket communication
+- **Deployment**: Vercel + GitHub
 
 ## API Keys Required
 
@@ -58,9 +57,8 @@ Both offer free tiers suitable for development and testing.
 ## Project Structure
 
 ```
-├── server.js                 # Main server file
-├── services/
-│   └── financialAnalyzer.js  # Core analysis logic
+├── api/
+│   └── analyze.js           # Vercel serverless function
 ├── public/
 │   ├── index.html           # Main chat interface
 │   ├── styles.css           # UI styling

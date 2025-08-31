@@ -2,15 +2,11 @@
   "name": "financial-chat-analyzer",
   "version": "1.0.0",
   "description": "Chat-based financial analysis tool for stocks and assets",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "vercel dev"
   },
   "dependencies": {},
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  },
+  "devDependencies": {},
   "keywords": ["finance", "chat", "stocks", "analysis", "sentiment"],
   "author": "",
   "license": "MIT"
