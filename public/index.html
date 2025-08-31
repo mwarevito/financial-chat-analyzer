@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Chat Analyzer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💹 Financial Chat Analyzer</h1>
+            <p>Ask me about any stock or asset for sentiment, news, technical & fundamental analysis</p>
+        </header>
+
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <strong>🤖 Financial Analyst</strong>
+                        <p>Hello! I'm your AI financial analyst. Ask me about any stock symbol (e.g., "What's the outlook for AAPL?" or "Analyze TSLA sentiment").</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator" style="display: none;">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <strong>🤖 Financial Analyst</strong>
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-group">
+                    <input type="text" id="messageInput" placeholder="Ask about a stock (e.g., AAPL, TSLA, MSFT)..." />
+                    <button id="sendButton">Send</button>
+                </div>
+                <div class="quick-actions">
+                    <button class="quick-btn" data-query="AAPL">📱 Apple</button>
+                    <button class="quick-btn" data-query="TSLA">🚗 Tesla</button>
+                    <button class="quick-btn" data-query="MSFT">💻 Microsoft</button>
+                    <button class="quick-btn" data-query="GOOGL">🔍 Google</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
