@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Chat-based financial analysis tool for stocks and assets",
   "scripts": {
-    "dev": "vercel dev"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^16.0.3"
+  },
   "devDependencies": {},
   "keywords": ["finance", "chat", "stocks", "analysis", "sentiment"],
   "author": "",

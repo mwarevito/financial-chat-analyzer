@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/analyze.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/public/$1"
+    }
+  ]
+}

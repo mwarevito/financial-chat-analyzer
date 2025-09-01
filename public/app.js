@@ -39,13 +39,23 @@ async function sendMessage() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
     
     try {
+        // Check if this is a follow-up
+        const isFollowUp = conversationContext.lastSymbol === symbol && conversationContext.lastAnalysis;
+        
+        console.log('Request:', { symbol, isFollowUp: !!isFollowUp, message });
+        
         // Send to serverless function for analysis
         const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ symbol, query: message })
+            body: JSON.stringify({ 
+                symbol, 
+                query: message,
+                context: conversationContext.lastAnalysis,
+                isFollowUp: isFollowUp
+            })
         });
         
         if (!response.ok) {
@@ -53,6 +63,20 @@ async function sendMessage() {
         }
         
         const data = await response.json();
+        
+        // Update conversation context
+        conversationContext.lastSymbol = symbol;
+        conversationContext.lastAnalysis = data;
+        conversationContext.conversationHistory.push({
+            query: message,
+            response: data,
+            timestamp: new Date()
+        });
+        
+        console.log('Context updated:', { 
+            lastSymbol: conversationContext.lastSymbol, 
+            hasAnalysis: !!conversationContext.lastAnalysis 
+        });
         
         // Hide typing indicator and display result
         typingIndicator.style.display = 'none';
@@ -66,28 +90,63 @@ async function sendMessage() {
     messageInput.value = '';
 }
 
+// Enhanced company recognition
+const companyMap = {
+    // Tech giants
+    'apple': 'AAPL', 'iphone': 'AAPL', 'mac': 'AAPL', 'ipad': 'AAPL',
+    'tesla': 'TSLA', 'elon': 'TSLA', 'musk': 'TSLA', 'electric car': 'TSLA',
+    'microsoft': 'MSFT', 'windows': 'MSFT', 'xbox': 'MSFT', 'office': 'MSFT',
+    'google': 'GOOGL', 'alphabet': 'GOOGL', 'youtube': 'GOOGL', 'android': 'GOOGL',
+    'amazon': 'AMZN', 'aws': 'AMZN', 'bezos': 'AMZN', 'prime': 'AMZN',
+    'meta': 'META', 'facebook': 'META', 'instagram': 'META', 'whatsapp': 'META',
+    'netflix': 'NFLX', 'streaming': 'NFLX',
+    'nvidia': 'NVDA', 'ai chip': 'NVDA', 'gpu': 'NVDA',
+    
+    // Finance & others
+    'berkshire': 'BRK.B', 'buffett': 'BRK.B', 'warren': 'BRK.B',
+    'jpmorgan': 'JPM', 'jp morgan': 'JPM',
+    'disney': 'DIS', 'mickey': 'DIS',
+    'coca cola': 'KO', 'coke': 'KO',
+    'walmart': 'WMT',
+    'boeing': 'BA',
+    'intel': 'INTC',
+    'amd': 'AMD',
+    'paypal': 'PYPL',
+    'salesforce': 'CRM',
+    'zoom': 'ZM',
+    'uber': 'UBER',
+    'airbnb': 'ABNB',
+    'spotify': 'SPOT',
+    'twitter': 'TWTR', 'x corp': 'TWTR'
+};
+
+// Conversation context storage
+let conversationContext = {
+    lastSymbol: null,
+    lastAnalysis: null,
+    conversationHistory: []
+};
+
 function extractSymbol(message) {
-    // Look for common stock symbols (3-5 uppercase letters)
+    const lowerMessage = message.toLowerCase().trim();
+    
+    // Simple follow-up patterns
+    const followUpWords = ['why', 'how', 'what', 'should', 'risk', 'price', 'news', 'explain', 'tell', 'more'];
+    const isFollowUp = followUpWords.some(word => lowerMessage.includes(word)) || message.includes('?');
+    
+    if (isFollowUp && conversationContext.lastSymbol) {
+        return conversationContext.lastSymbol;
+    }
+    
+    // Look for explicit stock symbols first (3-5 uppercase letters)
     const symbolMatch = message.match(/\b[A-Z]{1,5}\b/);
     if (symbolMatch) {
         return symbolMatch[0];
     }
     
-    // Check for company names and convert to symbols
-    const companyMap = {
-        'apple': 'AAPL',
-        'tesla': 'TSLA',
-        'microsoft': 'MSFT',
-        'google': 'GOOGL',
-        'amazon': 'AMZN',
-        'meta': 'META',
-        'netflix': 'NFLX',
-        'nvidia': 'NVDA'
-    };
-    
-    const lowerMessage = message.toLowerCase();
-    for (const [company, symbol] of Object.entries(companyMap)) {
-        if (lowerMessage.includes(company)) {
+    // Enhanced company name recognition
+    for (const [keyword, symbol] of Object.entries(companyMap)) {
+        if (lowerMessage.includes(keyword)) {
             return symbol;
         }
     }
@@ -122,27 +181,31 @@ function displayAnalysisResult(analysis) {
 function formatAnalysis(analysis) {
     let html = `<div class="analysis-result">`;
     
-    // Summary
-    html += `<div class="analysis-section">`;
-    html += `<h4>📋 Summary</h4>`;
-    html += `<div>${formatMarkdown(analysis.summary)}</div>`;
-    html += `</div>`;
+    // Check if this is a follow-up response
+    if (analysis.isFollowUp && analysis.summary) {
+        html += `<div class="analysis-section">`;
+        html += `<h4>💬 Follow-up Response</h4>`;
+        html += `<div class="follow-up-response">${formatMarkdown(analysis.summary)}</div>`;
+        html += `</div>`;
+        html += `</div>`;
+        return html;
+    }
     
-    // Recommendation (prominent placement)
+    // 1. SMART SIGNAL FIRST (most prominent)
     if (analysis.recommendation) {
         html += `<div class="analysis-section recommendation-section">`;
-        html += `<h4>🎯 Investment Recommendation</h4>`;
+        html += `<h4>🎯 Smart Signal</h4>`;
         html += `<div class="recommendation-card">`;
         html += `<div class="rec-action">${analysis.recommendation.action}</div>`;
         html += `<div class="rec-details">`;
         html += `<p><strong>Confidence:</strong> ${analysis.recommendation.confidence}</p>`;
-        html += `<p><strong>Risk Level:</strong> ${analysis.recommendation.riskLevel}</p>`;
+        html += `<p><strong>Risk:</strong> ${analysis.recommendation.riskLevel}</p>`;
         html += `<p><strong>Score:</strong> ${analysis.recommendation.score}/5</p>`;
         html += `</div>`;
         html += `<p class="rec-message">${analysis.recommendation.message}</p>`;
         if (analysis.recommendation.reasons.length > 0) {
             html += `<div class="rec-reasons">`;
-            html += `<strong>Key Reasons:</strong>`;
+            html += `<strong>📈 Bullish Factors:</strong>`;
             html += `<ul>`;
             analysis.recommendation.reasons.forEach(reason => {
                 html += `<li>✓ ${reason}</li>`;
@@ -152,10 +215,10 @@ function formatAnalysis(analysis) {
         }
         if (analysis.recommendation.riskFactors.length > 0) {
             html += `<div class="rec-risks">`;
-            html += `<strong>Risk Factors:</strong>`;
+            html += `<strong>⚠️ Risk Factors:</strong>`;
             html += `<ul>`;
             analysis.recommendation.riskFactors.forEach(risk => {
-                html += `<li>⚠️ ${risk}</li>`;
+                html += `<li>• ${risk}</li>`;
             });
             html += `</ul>`;
             html += `</div>`;
@@ -179,35 +242,38 @@ function formatAnalysis(analysis) {
         html += `</div>`;
     }
     
-    // Sentiment Analysis
-    if (analysis.sentiment && analysis.sentiment.score !== undefined) {
-        html += `<div class="analysis-section">`;
-        html += `<h4>🎭 Sentiment Analysis</h4>`;
-        html += `<p><strong>Score:</strong> ${analysis.sentiment.score} (${analysis.sentiment.message})</p>`;
-        if (analysis.sentiment.headlines && analysis.sentiment.headlines.length > 0) {
-            html += `<p><strong>Recent Headlines:</strong></p>`;
-            html += `<ul>`;
-            analysis.sentiment.headlines.slice(0, 3).forEach(headline => {
-                html += `<li>${escapeHtml(headline.title)} (${headline.sentiment > 0 ? '📈' : headline.sentiment < 0 ? '📉' : '➡️'})</li>`;
-            });
-            html += `</ul>`;
-        }
-        html += `</div>`;
-    }
-    
-    // News
+    // 4. COMBINED SENTIMENT & NEWS
     if (analysis.news && analysis.news.articles && analysis.news.articles.length > 0) {
         html += `<div class="analysis-section">`;
-        html += `<h4>📰 Recent News</h4>`;
+        html += `<h4>📰 Market Sentiment & News</h4>`;
+        
+        // Sentiment summary first
+        if (analysis.sentiment && analysis.sentiment.score !== undefined) {
+            html += `<div class="sentiment-summary">`;
+            html += `<p><strong>Overall Sentiment:</strong> ${analysis.sentiment.message} (Score: ${analysis.sentiment.score})</p>`;
+            html += `</div>`;
+        }
+        
+        // Top news articles
+        html += `<div class="news-articles">`;
         analysis.news.articles.slice(0, 3).forEach(article => {
             html += `<div class="news-item">`;
             html += `<h5>${escapeHtml(article.title)}</h5>`;
             if (article.description) {
-                html += `<p>${escapeHtml(article.description.substring(0, 150))}...</p>`;
+                html += `<p>${escapeHtml(article.description.substring(0, 120))}...</p>`;
             }
-            html += `<a href="${article.url}" target="_blank">Read more →</a>`;
+            html += `<div class="news-meta">`;
+            html += `<span>${article.source} • ${new Date(article.publishedAt).toLocaleDateString()}</span>`;
+            html += `<a href="${article.url}" target="_blank">Read →</a>`;
+            html += `</div>`;
             html += `</div>`;
         });
+        html += `</div>`;
+        html += `</div>`;
+    } else if (analysis.sentiment && analysis.sentiment.score !== undefined) {
+        html += `<div class="analysis-section">`;
+        html += `<h4>🎭 Market Sentiment</h4>`;
+        html += `<p>${analysis.sentiment.message}</p>`;
         html += `</div>`;
     }
     
