@@ -1,8 +1,19 @@
-const chatMessages = document.getElementById('chatMessages');
-const messageInput = document.getElementById('messageInput');
-const sendButton = document.getElementById('sendButton');
-const typingIndicator = document.getElementById('typingIndicator');
-const quickButtons = document.querySelectorAll('.quick-btn');
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+});
+
+function initializeApp() {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+    const typingIndicator = document.getElementById('typingIndicator');
+    const quickButtons = document.querySelectorAll('.quick-btn');
+
+    if (!chatMessages || !messageInput || !sendButton || !typingIndicator) {
+        console.error('Required DOM elements not found');
+        return;
+    }
 
 // Event listeners
 sendButton.addEventListener('click', sendMessage);
@@ -328,5 +339,6 @@ function formatNumber(num) {
     return parseInt(num).toLocaleString();
 }
 
-// Auto-focus on input
-messageInput.focus();
+    // Auto-focus on input
+    messageInput.focus();
+}
